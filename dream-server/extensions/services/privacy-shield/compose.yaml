@@ -43,4 +43,4 @@ services:
 
 volumes:
   dream-server_privacy-shield-data:
-    external: true
+    name: dream-server_privacy-shield-data

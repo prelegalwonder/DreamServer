@@ -36,10 +36,18 @@ services:
       start_period: 30s
     logging:
       driver: "json-file"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
 
 volumes:
   dream-server_n8n-data:
-    external: true
+    name: dream-server_n8n-data

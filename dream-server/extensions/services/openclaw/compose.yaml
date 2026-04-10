@@ -61,4 +61,4 @@ volumes:
   dream-server_openclaw-home:
     name: dream-server_openclaw-home
   dream-server_openclaw-data:
-    external: true
+    name: dream-server_openclaw-data

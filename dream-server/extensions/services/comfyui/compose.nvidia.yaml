@@ -39,8 +39,8 @@ services:
 
 volumes:
   dream-server_comfyui-models:
-    external: true
+    name: dream-server_comfyui-models
   dream-server_comfyui-output:
-    external: true
+    name: dream-server_comfyui-output
   dream-server_comfyui-input:
-    external: true
+    name: dream-server_comfyui-input

@@ -31,4 +31,4 @@ services:
 
 volumes:
   dream-server_qdrant-data:
-    external: true
+    name: dream-server_qdrant-data

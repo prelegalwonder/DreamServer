@@ -38,4 +38,4 @@ services:
 
 volumes:
   dream-server_hf-cache:
-    external: true
+    name: dream-server_hf-cache
