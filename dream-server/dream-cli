@@ -40,6 +40,50 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 #=============================================================================
+# Persistence Setup
+#=============================================================================
+# Ensures data persists outside the repository directory (~/.dream-server/data).
+# Creates a symlink in the repo to maintain compatibility with existing scripts.
+ensure_persistence() {
+    # 1. Define the permanent data root
+    # Default to ~/.dream-server/data, but allow .env override
+    export DREAM_DATA_ROOT="${DREAM_DATA_ROOT:-$HOME/.dream-server/data}"
+
+    # 2. Ensure directories exist
+    mkdir -p "$DREAM_DATA_ROOT"
+
+    # 3. Handle Migration and Symlink logic
+    local local_data_dir="$INSTALL_DIR/data"
+    
+    # If a real directory exists at INSTALL_DIR/data AND it's not a symlink,
+    # we need to migrate it to the new permanent home.
+    if [[ -d "$local_data_dir" && ! -L "$local_data_dir" ]]; then
+        log "Migrating existing data to permanent storage ($DREAM_DATA_ROOT)..."
+        # Combine existing data into the new root
+        cp -an "$local_data_dir/." "$DREAM_DATA_ROOT/"
+        # Move old data to a backup folder just in case
+        mv "$local_data_dir" "${local_data_dir}.bak-$(date +%s)"
+    fi
+
+    # Create the symlink if it doesn't exist
+    if [[ ! -L "$local_data_dir" ]]; then
+        ln -snf "$DREAM_DATA_ROOT" "$local_data_dir"
+        success "Persistence link established: data -> $DREAM_DATA_ROOT"
+    fi
+
+    # Ensure core subdirectories for named volumes exist (Docker needs them for bind mounts)
+    mkdir -p "$DREAM_DATA_ROOT/models"
+    mkdir -p "$DREAM_DATA_ROOT/webui"
+    mkdir -p "$DREAM_DATA_ROOT/huggingface"
+    mkdir -p "$DREAM_DATA_ROOT/qdrant"
+    mkdir -p "$DREAM_DATA_ROOT/n8n"
+    mkdir -p "$DREAM_DATA_ROOT/comfyui"
+    mkdir -p "$DREAM_DATA_ROOT/openclaw"
+    mkdir -p "$DREAM_DATA_ROOT/perplexica"
+    mkdir -p "$DREAM_DATA_ROOT/privacy-shield"
+}
+
+#=============================================================================
 # Helpers
 #=============================================================================
 log() { echo -e "${CYAN}[dream]${NC} $1"; }
@@ -72,6 +116,9 @@ check_install() {
             error "docker-compose.base.yml not found in $INSTALL_DIR"
         fi
     fi
+    
+    # Ensure persistence roots and symlinks are established
+    ensure_persistence
 }
 
 # Extract the major component of a semver string (e.g. "2.1.0" → "2").
@@ -266,6 +313,9 @@ _check_version_compat() {
 load_env() {
     [[ -f "$INSTALL_DIR/.env" ]] || { warn ".env not found at $INSTALL_DIR — run installer first"; return 1; }
     load_env_file "$INSTALL_DIR/.env"
+    
+    # Run persistence check after env is loaded so DREAM_DATA_ROOT can be overridden
+    ensure_persistence
 }
 
 #=============================================================================

@@ -32,3 +32,8 @@ services:
 volumes:
   dream-server_qdrant-data:
     name: dream-server_qdrant-data
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/qdrant
+      o: bind

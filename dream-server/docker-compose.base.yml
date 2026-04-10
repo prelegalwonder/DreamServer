@@ -257,21 +257,71 @@ networks:
 volumes:
   dream-server_models:
     name: dream-server_models
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/models
+      o: bind
   dream-server_webui-data:
     name: dream-server_webui-data
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/webui
+      o: bind
   dream-server_hf-cache:
     name: dream-server_hf-cache
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/huggingface
+      o: bind
   dream-server_qdrant-data:
     name: dream-server_qdrant-data
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/qdrant
+      o: bind
   dream-server_n8n-data:
     name: dream-server_n8n-data
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/n8n
+      o: bind
   dream-server_comfyui-models:
     name: dream-server_comfyui-models
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/comfyui/models
+      o: bind
   dream-server_comfyui-output:
     name: dream-server_comfyui-output
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/comfyui/output
+      o: bind
   dream-server_comfyui-input:
     name: dream-server_comfyui-input
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/comfyui/input
+      o: bind
   dream-server_openclaw-data:
     name: dream-server_openclaw-data
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/openclaw/data
+      o: bind
   dream-server_privacy-shield-data:
     name: dream-server_privacy-shield-data
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/privacy-shield/data
+      o: bind

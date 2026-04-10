@@ -78,7 +78,22 @@ services:
 volumes:
   dream-server_lemonade-cache:
     name: dream-server_lemonade-cache
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/lemonade/cache
+      o: bind
   dream-server_lemonade-llama:
     name: dream-server_lemonade-llama
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/lemonade/llama
+      o: bind
   dream-server_lemonade-recipe:
     name: dream-server_lemonade-recipe
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/lemonade/recipe
+      o: bind

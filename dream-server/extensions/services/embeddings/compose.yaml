@@ -35,3 +35,8 @@ services:
 volumes:
   dream-server_hf-cache:
     name: dream-server_hf-cache
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/huggingface
+      o: bind

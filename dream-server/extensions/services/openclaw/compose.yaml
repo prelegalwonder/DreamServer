@@ -60,5 +60,15 @@ services:
 volumes:
   dream-server_openclaw-home:
     name: dream-server_openclaw-home
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/openclaw/home
+      o: bind
   dream-server_openclaw-data:
     name: dream-server_openclaw-data
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/openclaw/data
+      o: bind

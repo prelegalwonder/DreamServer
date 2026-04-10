@@ -40,5 +40,15 @@ services:
 volumes:
   dream-server_perplexica-data:
     name: dream-server_perplexica-data
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/perplexica/data
+      o: bind
   dream-server_perplexica-uploads:
     name: dream-server_perplexica-uploads
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/perplexica/uploads
+      o: bind

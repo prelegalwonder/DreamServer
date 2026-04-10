@@ -44,3 +44,8 @@ services:
 volumes:
   dream-server_privacy-shield-data:
     name: dream-server_privacy-shield-data
+    driver: local
+    driver_opts:
+      type: none
+      device: ${DREAM_DATA_ROOT}/privacy-shield/data
+      o: bind
