@@ -29,7 +29,7 @@ services:
       - ./data/models:/models
       - ./config/llama-server/models.ini:/config/models.ini:ro
     ports:
-      - "127.0.0.1:${OLLAMA_PORT:-8080}:8080"
+      - "${DREAM_LAN_BIND:-127.0.0.1}:${OLLAMA_PORT:-8080}:8080"
     command:
       - --model
       - /models/${GGUF_FILE:-Qwen3.5-9B-Q4_K_M.gguf}
@@ -118,11 +118,12 @@ services:
       AUDIO_TTS_OPENAI_API_KEY: ""
       AUDIO_TTS_MODEL: "kokoro"
       AUDIO_TTS_VOICE: "af_heart"
+      # Served under /chat via dashboard nginx; if assets break, set the public URL env your Open WebUI version documents.
       TZ: "${TIMEZONE:-UTC}"
     volumes:
       - ./data/open-webui:/app/backend/data
     ports:
-      - "127.0.0.1:${WEBUI_PORT:-3000}:8080"
+      - "${DREAM_LAN_BIND:-127.0.0.1}:${WEBUI_PORT:-3000}:8080"
     deploy:
       resources:
         limits:
@@ -150,7 +151,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "127.0.0.1:${DASHBOARD_API_PORT:-3002}:3002"
+      - "${DREAM_LAN_BIND:-127.0.0.1}:${DASHBOARD_API_PORT:-3002}:3002"
     security_opt:
       - no-new-privileges:true
     logging: *default-logging
@@ -202,8 +203,8 @@ services:
   # ============================================
   dashboard:
     build:
-      context: ./extensions/services/dashboard
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: extensions/services/dashboard/Dockerfile
     container_name: dream-dashboard
     restart: unless-stopped
     security_opt:
@@ -211,10 +212,12 @@ services:
     logging: *default-logging
     environment:
       - DASHBOARD_API_KEY=${DASHBOARD_API_KEY:-}
+      - GPU_BACKEND=${GPU_BACKEND:-nvidia}
     volumes:
       - ./data:/data:ro
+      - ./extensions:/dream-server/extensions:ro
     ports:
-      - "127.0.0.1:${DASHBOARD_PORT:-3001}:3001"
+      - "${DREAM_LAN_BIND:-127.0.0.1}:${DASHBOARD_PORT:-3001}:3001"
     deploy:
       resources:
         limits:
@@ -228,6 +231,35 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3001/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ============================================
+  # HTTP gateway (optional single entry + same path routes as dashboard nginx)
+  # ============================================
+  dream-gateway:
+    build:
+      context: .
+      dockerfile: extensions/services/gateway/Dockerfile
+    container_name: dream-gateway
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+    environment:
+      - GPU_BACKEND=${GPU_BACKEND:-nvidia}
+    volumes:
+      - ./data:/data:ro
+      - ./extensions:/dream-server/extensions:ro
+    ports:
+      - "${DREAM_LAN_BIND:-127.0.0.1}:${GATEWAY_PORT:-3080}:3080"
+    depends_on:
+      dashboard:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3080/"]
       interval: 30s
       timeout: 5s
       retries: 3

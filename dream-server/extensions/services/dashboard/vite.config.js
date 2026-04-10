@@ -10,7 +10,13 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3002',
         changeOrigin: true
-      }
+      },
+      // Match dashboard nginx paths (see extension manifests gateway_path)
+      '/chat': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (p) => (p.replace(/^\/chat/, '') || '/'),
+      },
     }
   },
   build: {

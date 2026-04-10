@@ -7,6 +7,17 @@
 
 set -e
 
+export DREAM_EXTENSIONS_SERVICES="${DREAM_EXTENSIONS_SERVICES:-/dream-server/extensions/services}"
+export DREAM_USER_EXTENSIONS_DIR="${DREAM_USER_EXTENSIONS_DIR:-/data/user-extensions}"
+export NGINX_SERVICES_CONF="${NGINX_SERVICES_CONF:-/etc/nginx/dream-services.conf}"
+export GPU_BACKEND="${GPU_BACKEND:-nvidia}"
+
+echo "[dashboard] Rendering service proxy routes -> $NGINX_SERVICES_CONF"
+python3 /usr/local/lib/dream/render_service_proxy_conf.py || {
+    echo "[dashboard] WARNING: render_service_proxy_conf failed; writing empty stub"
+    echo "# proxy routes unavailable" > "$NGINX_SERVICES_CONF"
+}
+
 NGINX_CONF="/etc/nginx/conf.d/default.conf"
 API_KEY="${DASHBOARD_API_KEY:-}"
 KEY_FILE="/data/dashboard-api-key.txt"

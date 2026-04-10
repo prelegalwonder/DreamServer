@@ -8,12 +8,6 @@ import {
 import { getSidebarExternalLinks, getSidebarNavItems } from '../plugins/registry'
 import { useTheme } from '../contexts/ThemeContext'
 
-// Derive external service URLs from current host
-const getExternalUrl = (port) =>
-  typeof window !== 'undefined'
-    ? `http://${window.location.hostname}:${port}`
-    : `http://localhost:${port}`
-
 export default function Sidebar({ status, collapsed, onToggle }) {
   const { theme, cycleTheme, labels } = useTheme() // eslint-disable-line no-unused-vars -- theme switcher temporarily hidden
   const [serviceTokens, setServiceTokens] = useState({})
@@ -39,7 +33,7 @@ export default function Sidebar({ status, collapsed, onToggle }) {
 
   // Compute external links with auto-auth tokens (e.g. OpenClaw ?token=xxx)
   const externalLinks = useMemo(() => {
-    const links = getSidebarExternalLinks({ status, getExternalUrl, apiLinks })
+    const links = getSidebarExternalLinks({ status, apiLinks })
     return links.map(link => {
       if (link.key === 'openclaw' && serviceTokens.openclaw) {
         return { ...link, url: `${link.url}/?token=${serviceTokens.openclaw}` }

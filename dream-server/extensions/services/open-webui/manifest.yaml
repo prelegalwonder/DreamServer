@@ -5,6 +5,7 @@ compatibility:
 
 service:
   id: open-webui
+  gateway_path: /chat
   name: Open WebUI (Chat)
   aliases: [webui, ui, web]
   container_name: dream-webui

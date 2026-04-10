@@ -292,8 +292,8 @@ class TestExternalLinks:
     def test_returns_links_for_services(self, test_client, monkeypatch):
         import config
         monkeypatch.setattr(config, "SERVICES", {
-            "open-webui": {"name": "Open WebUI", "port": 3000, "external_port": 3000, "health": "/health", "host": "localhost"},
-            "n8n": {"name": "n8n", "port": 5678, "external_port": 5678, "health": "/healthz", "host": "localhost"},
+            "open-webui": {"name": "Open WebUI", "port": 3000, "external_port": 3000, "health": "/health", "host": "localhost", "gateway_path": "/chat", "ui_path": "/"},
+            "n8n": {"name": "n8n", "port": 5678, "external_port": 5678, "health": "/healthz", "host": "localhost", "gateway_path": "/n8n", "ui_path": "/"},
             "dashboard-api": {"name": "Dashboard API", "port": 3002, "external_port": 3002, "health": "/health", "host": "localhost"},
         })
         # Also patch the SERVICES imported in main module
@@ -305,6 +305,9 @@ class TestExternalLinks:
         link_ids = [link["id"] for link in data]
         assert "open-webui" in link_ids
         assert "n8n" in link_ids
+        by_id = {link["id"]: link for link in data}
+        assert by_id["open-webui"]["gateway_path"] == "/chat"
+        assert by_id["n8n"]["gateway_path"] == "/n8n"
 
     def test_excludes_dashboard_api(self, test_client, monkeypatch):
         import config

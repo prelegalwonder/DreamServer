@@ -63,6 +63,7 @@ class TestLoadExtensionManifests:
         assert services["test-service"]["port"] == 8080
         assert services["test-service"]["name"] == "Test Service"
         assert services["test-service"]["health"] == "/health"
+        assert services["test-service"]["gateway_path"] == "/test-service"
         assert len(features) == 1
         assert features[0]["id"] == "test-feature"
 
@@ -249,3 +250,25 @@ class TestLoadExtensionManifests:
         assert "service.id is required" in errors[0]["error"]
         assert "no-id-svc" in errors[0]["file"]
         assert services == {}
+
+    def test_rejects_duplicate_gateway_path(self, tmp_path):
+        a = tmp_path / "svc-a"
+        a.mkdir()
+        (a / "manifest.yaml").write_text(
+            "schema_version: dream.services.v1\n"
+            "service:\n  id: svc-a\n  name: A\n  port: 80\n"
+            "  gateway_path: /shared\n"
+        )
+        b = tmp_path / "svc-b"
+        b.mkdir()
+        (b / "manifest.yaml").write_text(
+            "schema_version: dream.services.v1\n"
+            "service:\n  id: svc-b\n  name: B\n  port: 81\n"
+            "  gateway_path: /shared\n"
+        )
+
+        services, _, errors = load_extension_manifests(tmp_path, "nvidia")
+        assert len(errors) == 1
+        assert "Duplicate gateway_path" in errors[0]["error"]
+        assert "svc-a" in services
+        assert "svc-b" not in services

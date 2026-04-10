@@ -37,6 +37,12 @@ Environment variables (set in `.env`):
 | `N8N_URL` | `http://n8n:5678` | n8n workflow URL |
 | `OPENCLAW_TOKEN` | *(empty)* | OpenClaw agent auth token |
 
+### Reverse-proxy paths (`gateway_path`)
+
+Each extension manifest may set `service.gateway_path` (e.g. `/chat` for Open WebUI). Defaults to `/<service.id>`. The dashboard and `dream-gateway` nginx containers generate matching `location` blocks at runtime from the same manifests. The API includes `gateway_path` on `/api/external-links` and on each entry in the aggregated status payload so the UI can build same-origin links instead of `host:port`.
+
+Apps served under a subpath may still need their own `BASE_URL` / `PUBLIC_URL` style settings — verify upstream docs if pages load broken assets.
+
 ## API Endpoints
 
 ### Core

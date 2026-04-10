@@ -41,6 +41,13 @@ _SERVICE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 _MAX_EXTENSION_BYTES = 50 * 1024 * 1024  # 50 MB
 
 
+def _compose_port_uses_safe_host_bind(port_str: str) -> bool:
+    """True if compose port string pins to loopback by default or uses DREAM_LAN_BIND."""
+    if "${DREAM_LAN_BIND" in port_str:
+        return True
+    return port_str.startswith("127.0.0.1:") and port_str.count(":") >= 2
+
+
 def _compute_extension_status(ext: dict, services_by_id: dict) -> str:
     """Compute the runtime status of an extension."""
     ext_id = ext["id"]
@@ -218,14 +225,19 @@ def _scan_compose_content(compose_path: Path, *, trusted: bool = False) -> None:
         for port in ports:
             if isinstance(port, dict):
                 # Dict-form: {target: 80, published: 8080, host_ip: ...}
-                host_ip = port.get("host_ip", "")
-                if port.get("published") and host_ip != "127.0.0.1":
+                host_ip = str(port.get("host_ip", ""))
+                if port.get("published") and host_ip not in (
+                    "127.0.0.1",
+                    "0.0.0.0",
+                ) and "${DREAM_LAN_BIND" not in host_ip:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Extension rejected: dict port binding in {svc_name} must use host_ip: 127.0.0.1",
+                        detail=f"Extension rejected: dict port binding in {svc_name} must use host_ip: 127.0.0.1 (or DREAM_LAN_BIND / 0.0.0.0)",
                     )
             else:
-                port_str = str(port)
+                port_str = str(port).strip().strip('"').strip("'")
+                if _compose_port_uses_safe_host_bind(port_str):
+                    continue
                 if ":" in port_str:
                     parts = port_str.split(":")
                     if len(parts) >= 3:
@@ -403,6 +415,9 @@ async def extensions_catalog(
         user_dir = USER_EXTENSIONS_DIR / ext_id
         source = "user" if user_dir.is_dir() else ("core" if ext_id in SERVICES else "library")
         enriched = {**ext, "status": status, "installable": installable, "source": source}
+        svc_cfg = SERVICES.get(ext_id)
+        if svc_cfg:
+            enriched["gateway_path"] = svc_cfg.get("gateway_path") or f"/{ext_id.strip('/')}"
 
         if category and ext.get("category") != category:
             continue

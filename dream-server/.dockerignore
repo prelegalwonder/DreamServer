@@ -1,0 +1,7 @@
+# Root compose build context (dashboard, gateway) — keep image builds small
+data/
+.git/
+**/__pycache__/
+**/node_modules/
+*.pyc
+.env

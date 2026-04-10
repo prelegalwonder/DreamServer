@@ -20,12 +20,7 @@ import {
 import { memo, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FeatureDiscoveryBanner } from '../components/FeatureDiscovery'
-
-// Helper to build external service URLs from current host
-const getExternalUrl = (port) =>
-  typeof window !== 'undefined'
-    ? `http://${window.location.hostname}:${port}`
-    : `http://localhost:${port}`
+import { gatewayServiceHref, getExternalUrl } from '../lib/serviceUrls'
 
 // Compute overall health from services (excludes not_deployed from counts)
 function computeHealth(services) {
@@ -50,18 +45,23 @@ function pickFeatureLink(feature, services) {
   const req = feature?.requirements || {}
   const wanted = [...(req.servicesAll || req.services || []), ...(req.servicesAny || req.services_any || [])]
 
-  // Match by name substring since status API uses display names, not IDs
   const matchService = (needle) =>
     svc.find(s => s.status === 'healthy' && s.port &&
-      (s.name || '').toLowerCase().includes(needle.toLowerCase()))
+      ((s.id || '').toLowerCase() === needle.toLowerCase() ||
+        (s.name || '').toLowerCase().includes(needle.toLowerCase())))
 
   const firstHealthy = wanted.map(matchService).find(Boolean)
   if (firstHealthy) {
-    return getExternalUrl(firstHealthy.port)
+    return firstHealthy.gateway_path
+      ? gatewayServiceHref(firstHealthy.gateway_path, '/')
+      : getExternalUrl(firstHealthy.port)
   }
 
-  const fallbackWebUi = matchService('webui') || matchService('open webui')
-  return fallbackWebUi ? getExternalUrl(fallbackWebUi.port) : null
+  const fallbackWebUi = matchService('webui') || matchService('open webui') || matchService('open-webui')
+  if (!fallbackWebUi) return null
+  return fallbackWebUi.gateway_path
+    ? gatewayServiceHref(fallbackWebUi.gateway_path, '/')
+    : getExternalUrl(fallbackWebUi.port)
 }
 
 function normalizeFeatureStatus(featureStatus) {

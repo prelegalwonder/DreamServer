@@ -2,6 +2,7 @@ import { coreRoutes, coreExternalLinks } from './core'
 import {
   MessageSquare, Network, Bot, Terminal, Search, Image, ExternalLink
 } from 'lucide-react'
+import { serviceBrowserHref } from '../lib/serviceUrls'
 
 const ICON_MAP = {
   MessageSquare, Network, Bot, Terminal, Search, Image, ExternalLink,
@@ -47,7 +48,7 @@ function isServiceHealthy(status, needles = []) {
 }
 
 export function getSidebarExternalLinks(context = {}) {
-  const { status, getExternalUrl, apiLinks = [] } = context
+  const { status, apiLinks = [] } = context
   // Merge static plugin links with API-fetched links
   const allLinks = [...coreExternalLinks, ...externalLinkExtensions, ...apiLinks]
   // Deduplicate by id (API links take priority)
@@ -66,7 +67,7 @@ export function getSidebarExternalLinks(context = {}) {
       label: link.label,
       icon: typeof link.icon === 'string' ? (ICON_MAP[link.icon] || ExternalLink) : (link.icon || ExternalLink),
       healthy,
-      url: (typeof getExternalUrl === 'function' ? getExternalUrl(link.port) : `http://localhost:${link.port}`) + (link.ui_path && link.ui_path !== '/' ? link.ui_path : ''),
+      url: serviceBrowserHref(link) || `http://localhost:${link.port || ''}`,
     }
   })
 }

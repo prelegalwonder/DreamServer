@@ -269,15 +269,21 @@ def _serialize_model(model_info) -> Optional[dict]:
 
 
 def _serialize_services(service_statuses: list[ServiceStatus], uptime: int) -> list[dict]:
-    return [
-        {
+    out = []
+    for service in service_statuses:
+        cfg = SERVICES.get(service.id, {})
+        row = {
+            "id": service.id,
             "name": service.name,
             "status": service.status,
             "port": service.external_port,
             "uptime": uptime if service.status == "healthy" else None,
+            "gateway_path": cfg.get("gateway_path"),
         }
-        for service in service_statuses
-    ]
+        if row["gateway_path"] is None and service.id:
+            row["gateway_path"] = f"/{service.id.strip('/')}"
+        out.append(row)
+    return out
 
 
 def _fallback_services() -> list[dict]:
@@ -286,10 +292,13 @@ def _fallback_services() -> list[dict]:
         external_port = config.get("external_port", config.get("port", 0))
         if not external_port:
             continue
+        gp = config.get("gateway_path") or f"/{service_id.strip('/')}"
         links.append({
+            "id": service_id,
             "name": config.get("name", service_id),
             "status": "unknown",
             "port": external_port,
+            "gateway_path": gp,
             "uptime": None,
         })
     return links
@@ -1179,7 +1188,7 @@ async def _build_api_status() -> dict:
             gpu_data["powerDraw"] = gpu_info.power_w
         gpu_data["memoryLabel"] = "VRAM Partition" if gpu_info.memory_type == "unified" else "VRAM"
 
-    services_data = [{"name": s.name, "status": s.status, "port": s.external_port, "uptime": uptime if s.status == "healthy" else None} for s in service_statuses]
+    services_data = _serialize_services(service_statuses, uptime)
 
     model_data = None
     if model_info:
@@ -1261,8 +1270,10 @@ async def get_external_links(api_key: str = Depends(verify_api_key)):
         ext_port = cfg.get("external_port", cfg.get("port", 0))
         if not ext_port or sid == "dashboard-api":
             continue
+        gp = cfg.get("gateway_path") or f"/{sid.strip('/')}"
         links.append({
             "id": sid, "label": cfg.get("name", sid), "port": ext_port,
+            "gateway_path": gp,
             "ui_path": cfg.get("ui_path", "/"),
             "icon": SIDEBAR_ICONS.get(sid, "ExternalLink"),
             "healthNeedles": [sid, cfg.get("name", sid).lower()],

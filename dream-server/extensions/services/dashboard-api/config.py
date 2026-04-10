@@ -40,6 +40,21 @@ def _read_env_from_file(key: str) -> str:
 # --- Manifest Loading ---
 
 
+def _normalize_gateway_path(service_id: str, raw: Any) -> str:
+    """Single leading slash, no trailing slash; default /{service_id}."""
+    if raw is None or (isinstance(raw, str) and not raw.strip()):
+        seg = service_id.strip("/").replace("//", "/") or service_id
+        return f"/{seg}"
+    path = str(raw).strip()
+    if not path.startswith("/"):
+        path = "/" + path
+    inner = path.strip("/")
+    if not inner:
+        seg = service_id.strip("/") or service_id
+        return f"/{seg}"
+    return "/" + inner
+
+
 def _read_manifest_file(path: Path) -> dict[str, Any]:
     """Load a JSON or YAML extension manifest file."""
     text = path.read_text()
@@ -68,6 +83,8 @@ def load_extension_manifests(
     if not manifest_dir.exists():
         logger.info("Extension manifest directory not found: %s", manifest_dir)
         return services, features, errors
+
+    gateway_path_claims: dict[str, str] = {}  # path -> service_id
 
     manifest_files: list[Path] = []
     for item in sorted(manifest_dir.iterdir()):
@@ -119,6 +136,15 @@ def load_extension_manifests(
                 else:
                     external_port = int(ext_port_default)
 
+                gateway_path = _normalize_gateway_path(service_id, service.get("gateway_path"))
+                owner = gateway_path_claims.get(gateway_path)
+                if owner and owner != service_id:
+                    raise ValueError(
+                        f"Duplicate gateway_path {gateway_path!r} on service {service_id!r} "
+                        f"(already claimed by {owner!r})"
+                    )
+                gateway_path_claims[gateway_path] = service_id
+
                 services[service_id] = {
                     "host": host,
                     "port": int(service.get("port", 0)),
@@ -126,6 +152,7 @@ def load_extension_manifests(
                     "health": service.get("health", "/health"),
                     "name": service.get("name", service_id),
                     "ui_path": service.get("ui_path", "/"),
+                    "gateway_path": gateway_path,
                     "container_name": service.get("container_name", f"dream-{service_id}"),
                     **({"type": service["type"]} if "type" in service else {}),
                     **({"health_port": int(service["health_port"])} if "health_port" in service else {}),

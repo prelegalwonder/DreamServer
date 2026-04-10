@@ -4,6 +4,7 @@ import {
   Box, Loader2, RefreshCw, ChevronDown, ChevronUp, Package, Info, X, Download, Trash2, ExternalLink, Terminal, Copy, Check,
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
+import { gatewayServiceHref, getExternalUrl } from '../lib/serviceUrls'
 
 // Auth: nginx injects "Authorization: Bearer ${DASHBOARD_API_KEY}" via
 // proxy_set_header for all /api/ requests (see nginx.conf).  All fetches
@@ -468,17 +469,17 @@ function ExtensionCard({ ext, gpuBackend, agentAvailable, onDetails, onConsole, 
           )}
         </div>
         <div className="flex items-center gap-1">
-          {status === 'enabled' && (ext.external_port_default || ext.port) && (ext.external_port_default || ext.port) !== 0 ? (
+          {status === 'enabled' && ((ext.gateway_path) || ((ext.external_port_default || ext.port) && (ext.external_port_default || ext.port) !== 0)) ? (
             <a
-              href={`http://${window.location.hostname}:${ext.external_port_default || ext.port}`}
+              href={ext.gateway_path ? gatewayServiceHref(ext.gateway_path, '/') : (getExternalUrl(ext.external_port_default || ext.port) || '#')}
               target="_blank"
               rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
               className="flex items-center gap-1 px-2 py-1.5 text-xs text-theme-accent-light hover:text-theme-accent hover:bg-theme-accent/10 rounded-lg transition-colors"
-              title={`Open on port ${ext.external_port_default || ext.port}`}
+              title={ext.gateway_path ? `Open ${ext.gateway_path}` : `Open on port ${ext.external_port_default || ext.port}`}
             >
               <ExternalLink size={11} />
-              :{ext.external_port_default || ext.port}
+              {ext.gateway_path || `:${ext.external_port_default || ext.port}`}
             </a>
           ) : null}
           {(isUserExt || isCore) && status !== 'not_installed' && (
