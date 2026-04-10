@@ -10,9 +10,10 @@ services:
       - N8N_DEFAULT_ADMIN_EMAIL=${N8N_USER:?N8N_USER must be set in .env}
       - N8N_DEFAULT_ADMIN_PASSWORD=${N8N_PASS:?N8N_PASS must be set in .env}
       - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PATH=/n8n/
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
-      - WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://localhost:5678}
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://localhost:5678/n8n/}
       - GENERIC_TIMEZONE=${TIMEZONE:-UTC}
     volumes:
       - ./data/n8n:/home/node/.n8n

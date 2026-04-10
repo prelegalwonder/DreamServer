@@ -74,6 +74,7 @@ services:
     security_opt:
       - no-new-privileges:true
     environment:
+      ROOT_PATH: "/chat"
       ENABLE_OLLAMA_API: "false"
       OPENAI_API_BASE_URL: "${LLM_API_URL:-http://llama-server:8080}/v1"
       OPENAI_API_KEY: ""
@@ -232,6 +233,22 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  # ============================================
+  # Reverse Proxy (Nginx via URI path routing)
+  # ============================================
+  nginx-proxy:
+    image: nginx:1.25-alpine
+    container_name: dream-nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:${EXTERNAL_PORT:-80}:80"
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - dashboard
+      - dashboard-api
+    logging: *default-logging
 
 networks:
   default:
