@@ -13,13 +13,22 @@ const PROXY_PATHS = {
   'open-webui': '/chat',
   'n8n': '/n8n',
   'llama-server': '/llm',
+  'llm': '/llm',
   'dashboard-api': '/api',
   'comfyui': '/comfy',
   'searxng': '/searx',
   'perplexica': '/search',
   'dreamforge': '/forge',
   'openclaw': '/claw',
-  'token-spy': '/spy'
+  'token-spy': '/spy',
+  'whisper': '/whisper',
+  'qdrant': '/qdrant',
+  'litellm': '/gateway',
+  'embeddings': '/embeddings',
+  'tts': '/tts',
+  'privacy-shield': '/shield',
+  'opencode': '/code',
+  'ape': '/ape'
 }
 
 const getExternalUrl = (port, id) => {
