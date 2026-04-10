@@ -271,6 +271,7 @@ def _serialize_model(model_info) -> Optional[dict]:
 def _serialize_services(service_statuses: list[ServiceStatus], uptime: int) -> list[dict]:
     return [
         {
+            "id": service.id,
             "name": service.name,
             "status": service.status,
             "port": service.external_port,
@@ -287,6 +288,7 @@ def _fallback_services() -> list[dict]:
         if not external_port:
             continue
         links.append({
+            "id": service_id,
             "name": config.get("name", service_id),
             "status": "unknown",
             "port": external_port,

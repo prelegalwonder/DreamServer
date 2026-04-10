@@ -7,39 +7,8 @@ import {
 } from 'lucide-react'
 import { getSidebarExternalLinks, getSidebarNavItems } from '../plugins/registry'
 import { useTheme } from '../contexts/ThemeContext'
+import { getExternalUrl } from '../utils/proxy'
 
-// Derive external service URLs using Nginx proxy paths or fallback to ports
-const PROXY_PATHS = {
-  'open-webui': '/chat',
-  'n8n': '/n8n',
-  'llama-server': '/llm',
-  'llm': '/llm',
-  'dashboard-api': '/api',
-  'comfyui': '/comfy',
-  'searxng': '/searx',
-  'perplexica': '/search',
-  'dreamforge': '/forge',
-  'openclaw': '/claw',
-  'token-spy': '/spy',
-  'whisper': '/whisper',
-  'qdrant': '/qdrant',
-  'litellm': '/gateway',
-  'embeddings': '/embeddings',
-  'tts': '/tts',
-  'privacy-shield': '/shield',
-  'opencode': '/code',
-  'ape': '/ape'
-}
-
-const getExternalUrl = (port, id) => {
-  if (id && PROXY_PATHS[id]) {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
-    return origin + PROXY_PATHS[id]
-  }
-  return typeof window !== 'undefined'
-    ? `http://${window.location.hostname}:${port}`
-    : `http://localhost:${port}`
-}
 
 export default function Sidebar({ status, collapsed, onToggle }) {
   const { theme, cycleTheme, labels } = useTheme() // eslint-disable-line no-unused-vars -- theme switcher temporarily hidden

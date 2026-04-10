@@ -20,12 +20,8 @@ import {
 import { memo, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FeatureDiscoveryBanner } from '../components/FeatureDiscovery'
+import { getExternalUrl } from '../utils/proxy'
 
-// Helper to build external service URLs from current host
-const getExternalUrl = (port) =>
-  typeof window !== 'undefined'
-    ? `http://${window.location.hostname}:${port}`
-    : `http://localhost:${port}`
 
 // Compute overall health from services (excludes not_deployed from counts)
 function computeHealth(services) {
@@ -57,11 +53,11 @@ function pickFeatureLink(feature, services) {
 
   const firstHealthy = wanted.map(matchService).find(Boolean)
   if (firstHealthy) {
-    return getExternalUrl(firstHealthy.port)
+    return getExternalUrl(firstHealthy.port, firstHealthy.id)
   }
 
   const fallbackWebUi = matchService('webui') || matchService('open webui')
-  return fallbackWebUi ? getExternalUrl(fallbackWebUi.port) : null
+  return fallbackWebUi ? getExternalUrl(fallbackWebUi.port, fallbackWebUi.id) : null
 }
 
 function normalizeFeatureStatus(featureStatus) {
