@@ -14,7 +14,12 @@ const PROXY_PATHS = {
   'n8n': '/n8n',
   'llama-server': '/llm',
   'dashboard-api': '/api',
-  'comfyui': '/comfy'
+  'comfyui': '/comfy',
+  'searxng': '/searx',
+  'perplexica': '/search',
+  'dreamforge': '/forge',
+  'openclaw': '/claw',
+  'token-spy': '/spy'
 }
 
 const getExternalUrl = (port, id) => {
