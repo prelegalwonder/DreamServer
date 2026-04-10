@@ -8,7 +8,7 @@ Security best practices for running Dream Server.
 
 1. **Run `./install.sh`** — generates secure random secrets automatically
 2. **Never use default passwords** — if you see "changeme", change it
-3. **Bind to localhost only** — exposed by default for a reason
+3. **Know your network bind** — published ports default to all interfaces (`0.0.0.0`) for LAN-friendly home servers; use `DREAM_LAN_BIND=127.0.0.1` and a firewall when you want loopback-only
 
 ---
 
@@ -50,17 +50,25 @@ docker compose down && docker compose up -d
 
 ## Network Security
 
-### Default: Localhost Only
+### Default: all interfaces (LAN-reachable)
 
-All services bind to `127.0.0.1` — accessible only from the local machine.
+Compose uses `${DREAM_LAN_BIND:-0.0.0.0}` for host port bindings so phones and other PCs on your network can reach the UI, gateway (`dream-gateway`), and service ports without extra env vars.
 
-### Exposing to LAN
-
-For access from other devices on your network:
+**Harden to localhost only** (no remote host access to published ports):
 
 ```bash
-# Allow specific ports from local network
+# In .env
+DREAM_LAN_BIND=127.0.0.1
+```
+
+Then recreate containers: `docker compose up -d --force-recreate` (with your usual `-f` flags).
+
+### Firewall (recommended on LAN too)
+
+```bash
+# Example: allow specific ports from local network only
 sudo ufw allow from 192.168.0.0/24 to any port 3000  # WebUI
+sudo ufw allow from 192.168.0.0/24 to any port 3080  # HTTP gateway
 sudo ufw allow from 192.168.0.0/24 to any port 8080  # LLM API
 ```
 

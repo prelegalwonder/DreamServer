@@ -5,7 +5,8 @@
 #   check      - Check for updates against GitHub releases
 #   status     - Show current version, install path, last check
 #   backup     - Backup compose files, .env, and version state
-#   update     - Pull new version, run migrations, restart services
+#   update     - Pull new version, run migrations, rebuild images, restart services
+#   apply      - Fast path: docker compose up -d --build (after you git pull; no install.sh)
 #   rollback   - Restore from last backup
 #   changelog  - Show version changelog
 #   health     - Run health checks on all services
@@ -497,6 +498,66 @@ cmd_backup() {
 }
 
 #==============================================================================
+# COMPOSE FLAGS (shared by update / apply)
+#==============================================================================
+
+# Prints docker compose -f ... flags for INSTALL_DIR (empty if unusable).
+_dream_resolve_compose_flags() {
+    local install_dir="${INSTALL_DIR}"
+    local gpu tier compose_flags="" all_exist=true flag_file
+    gpu=$(grep '^GPU_BACKEND=' "${install_dir}/.env" 2>/dev/null | cut -d= -f2 | tr -d '"' || echo "")
+    tier=$(grep '^TIER=' "${install_dir}/.env" 2>/dev/null | cut -d= -f2 | tr -d '"' || echo "")
+    if [[ -x "${install_dir}/scripts/resolve-compose-stack.sh" ]]; then
+        compose_flags=$(bash "${install_dir}/scripts/resolve-compose-stack.sh" \
+            --script-dir "$install_dir" \
+            --tier "${tier:-1}" \
+            --gpu-backend "${gpu:-nvidia}" | tail -1)
+    fi
+    if [[ -n "${compose_flags}" ]]; then
+        for flag_file in $(echo "$compose_flags" | grep -o -- '-f [^ ]*' | cut -d' ' -f2); do
+            if [[ ! -f "${install_dir}/${flag_file}" ]]; then
+                log_warn "Compose file not found: ${flag_file} — falling back to docker-compose.yml"
+                all_exist=false
+                break
+            fi
+        done
+        [[ "$all_exist" == "true" ]] || compose_flags=""
+    fi
+    echo "$compose_flags"
+}
+
+#==============================================================================
+# COMMAND: APPLY (fast redeploy after git pull — no install.sh)
+#==============================================================================
+
+cmd_apply() {
+    log_info "Rebuilding images and restarting stack (docker compose up -d --build)"
+    log_info "Use after: git pull  —  does not run install.sh or re-download models"
+    cd "$INSTALL_DIR" || return 1
+
+    local compose_flags
+    compose_flags=$(_dream_resolve_compose_flags)
+
+    if [[ -n "${compose_flags}" ]]; then
+        if ! docker compose ${compose_flags} up -d --build; then
+            log_warn "docker compose v2 up --build failed, trying v1..."
+            docker-compose ${compose_flags} up -d --build || return 1
+        fi
+    elif [[ -f "${INSTALL_DIR}/docker-compose.yml" ]]; then
+        if ! docker compose up -d --build; then
+            log_warn "docker compose v2 up --build failed, trying v1..."
+            docker-compose up -d --build || return 1
+        fi
+    else
+        log_error "No compose stack found. Expected scripts/resolve-compose-stack.sh or docker-compose.yml"
+        return 1
+    fi
+
+    log_ok "Apply complete."
+    log_info "Check status: ./dream-update.sh health"
+}
+
+#==============================================================================
 # COMMAND: UPDATE
 #==============================================================================
 
@@ -512,30 +573,8 @@ cmd_update() {
     local snap_dir
     snap_dir=$(snapshot_pre_update "$timestamp")
 
-    # Read GPU config from .env for compose resolution
-    local _update_gpu_backend _update_tier
-    _update_gpu_backend=$(grep '^GPU_BACKEND=' "${INSTALL_DIR}/.env" 2>/dev/null | cut -d= -f2 | tr -d '"' || echo "")
-    _update_tier=$(grep '^TIER=' "${INSTALL_DIR}/.env" 2>/dev/null | cut -d= -f2 | tr -d '"' || echo "")
-
-    # Resolve compose flags once — used in restart and rollback paths.
-    local compose_flags=""
-    if [[ -x "${INSTALL_DIR}/scripts/resolve-compose-stack.sh" ]]; then
-        compose_flags=$(bash "${INSTALL_DIR}/scripts/resolve-compose-stack.sh" \
-            --script-dir "$INSTALL_DIR" \
-            --tier "${_update_tier:-1}" \
-            --gpu-backend "${_update_gpu_backend:-nvidia}" | tail -1)
-    fi
-    if [[ -n "${compose_flags}" ]]; then
-        local all_exist=true
-        for flag_file in $(echo "$compose_flags" | grep -o -- '-f [^ ]*' | cut -d' ' -f2); do
-            if [[ ! -f "${INSTALL_DIR}/${flag_file}" ]]; then
-                log_warn "Compose file not found: ${flag_file} — falling back to docker-compose.yml"
-                all_exist=false
-                break
-            fi
-        done
-        [[ "$all_exist" == "true" ]] || compose_flags=""
-    fi
+    local compose_flags
+    compose_flags=$(_dream_resolve_compose_flags)
 
     # ── Step 2: pull latest changes ───────────────────────────────────────────
     log_info "Pulling latest changes..."
@@ -566,26 +605,26 @@ cmd_update() {
         done
     fi
 
-    # ── Step 4: restart services ──────────────────────────────────────────────
-    log_info "Restarting services..."
+    # ── Step 4: restart services (rebuild local images — dashboard, gateway, etc.) ──
+    log_info "Restarting services (rebuilding changed images)..."
     cd "$INSTALL_DIR"
     if [[ -n "${compose_flags}" ]]; then
         if ! docker compose ${compose_flags} down --remove-orphans; then
             log_warn "docker compose v2 down failed, trying v1..."
             docker-compose ${compose_flags} down --remove-orphans
         fi
-        if ! docker compose ${compose_flags} up -d; then
-            log_warn "docker compose v2 up failed, trying v1..."
-            docker-compose ${compose_flags} up -d
+        if ! docker compose ${compose_flags} up -d --build; then
+            log_warn "docker compose v2 up --build failed, trying v1..."
+            docker-compose ${compose_flags} up -d --build
         fi
     elif [[ -f "${INSTALL_DIR}/docker-compose.yml" ]]; then
         if ! docker compose down --remove-orphans; then
             log_warn "docker compose v2 down failed, trying v1..."
             docker-compose down --remove-orphans
         fi
-        if ! docker compose up -d; then
-            log_warn "docker compose v2 up failed, trying v1..."
-            docker-compose up -d
+        if ! docker compose up -d --build; then
+            log_warn "docker compose v2 up --build failed, trying v1..."
+            docker-compose up -d --build
         fi
     else
         log_warn "No compose files found. Skipping container restart."
@@ -855,6 +894,7 @@ Examples:
   dream-update.sh status
   dream-update.sh backup pre-experiment
   dream-update.sh update
+  dream-update.sh apply
   dream-update.sh rollback
   dream-update.sh rollback 20260317-120000
   dream-update.sh changelog v1.1.0
@@ -883,6 +923,9 @@ main() {
             ;;
         update)
             cmd_update "$@"
+            ;;
+        apply)
+            cmd_apply "$@"
             ;;
         rollback)
             cmd_rollback "$@"

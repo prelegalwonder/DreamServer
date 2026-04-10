@@ -54,6 +54,18 @@ cd DreamServer
 
 The installer auto-detects your GPU, picks the right model, generates secure passwords, and starts everything. Open **http://localhost:3000** and start chatting.
 
+### Updating a git checkout (do not re-run the full installer)
+
+After `git pull`, rebuild and restart containers (dashboard, gateway, API, etc.) without downloading models again:
+
+```bash
+# Install layout is usually ~/dream-server. If you cloned the full GitHub repo, use the inner directory:
+cd ~/dream-server              # or: .../DreamServer/dream-server
+./dream-update.sh apply
+```
+
+For a full update with rollback snapshot, migrations, and `git pull` in one step: `./dream-update.sh update`.
+
 ### Instant Start (Bootstrap Mode)
 
 By default, Dream Server uses **bootstrap mode** for instant gratification:
