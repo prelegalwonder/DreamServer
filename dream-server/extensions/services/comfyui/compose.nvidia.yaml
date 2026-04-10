@@ -10,9 +10,9 @@ services:
     ports:
       - "127.0.0.1:${COMFYUI_PORT:-8188}:8188"
     volumes:
-      - dream-comfyui-models:/models
-      - dream-comfyui-output:/output
-      - dream-comfyui-input:/input
+      - dream-server_comfyui-models:/models
+      - dream-server_comfyui-output:/output
+      - dream-server_comfyui-input:/input
       - ./data/comfyui/workflows:/workflows:ro
     shm_size: '8g'
     deploy:
@@ -38,9 +38,9 @@ services:
         max-file: "3"
 
 volumes:
-  dream-comfyui-models:
+  dream-server_comfyui-models:
     external: true
-  dream-comfyui-output:
+  dream-server_comfyui-output:
     external: true
-  dream-comfyui-input:
+  dream-server_comfyui-input:
     external: true

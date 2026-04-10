@@ -16,7 +16,7 @@ services:
       - WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://localhost:5678/n8n/}
       - GENERIC_TIMEZONE=${TIMEZONE:-UTC}
     volumes:
-      - dream-n8n-data:/home/node/.n8n
+      - dream-server_n8n-data:/home/node/.n8n
       - ./config/n8n:/home/node/workflows
     ports:
       - "127.0.0.1:${N8N_PORT:-5678}:5678"
@@ -41,5 +41,5 @@ services:
         max-file: "3"
 
 volumes:
-  dream-n8n-data:
+  dream-server_n8n-data:
     external: true

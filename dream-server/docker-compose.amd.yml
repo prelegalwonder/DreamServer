@@ -29,9 +29,9 @@ services:
       - "8001"
     volumes:
       - ./data/models:/models:ro
-      - lemonade-cache:/root/.cache/huggingface
-      - lemonade-llama:/opt/lemonade/llama
-      - lemonade-recipe:/root/.cache/lemonade
+      - dream-server_lemonade-cache:/root/.cache/huggingface
+      - dream-server_lemonade-llama:/opt/lemonade/llama
+      - dream-server_lemonade-recipe:/root/.cache/lemonade
     devices:
       - /dev/dri:/dev/dri
       - /dev/kfd:/dev/kfd
@@ -76,6 +76,9 @@ services:
       - /sys/class/hwmon:/sys/class/hwmon:ro
 
 volumes:
-  lemonade-cache:
-  lemonade-llama:
-  lemonade-recipe:
+  dream-server_lemonade-cache:
+    name: dream-server_lemonade-cache
+  dream-server_lemonade-llama:
+    name: dream-server_lemonade-llama
+  dream-server_lemonade-recipe:
+    name: dream-server_lemonade-recipe

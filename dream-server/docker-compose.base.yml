@@ -26,7 +26,7 @@ services:
     container_name: dream-llama-server
     restart: unless-stopped
     volumes:
-      - dream-models:/models
+      - dream-server_models:/models
       - ./config/llama-server/models.ini:/config/models.ini:ro
     ports:
       - "127.0.0.1:${OLLAMA_PORT:-8080}:8080"
@@ -121,7 +121,7 @@ services:
       AUDIO_TTS_VOICE: "af_heart"
       TZ: "${TIMEZONE:-UTC}"
     volumes:
-      - dream-webui-data:/app/backend/data
+      - dream-server_webui-data:/app/backend/data
     ports:
       - "127.0.0.1:${WEBUI_PORT:-3000}:8080"
     deploy:
@@ -255,23 +255,23 @@ networks:
     name: dream-network
 
 volumes:
-  dream-models:
-    name: dream-models
-  dream-webui-data:
-    name: dream-webui-data
-  dream-hf-cache:
-    name: dream-hf-cache
-  dream-qdrant-data:
-    name: dream-qdrant-data
-  dream-n8n-data:
-    name: dream-n8n-data
-  dream-comfyui-models:
-    name: dream-comfyui-models
-  dream-comfyui-output:
-    name: dream-comfyui-output
-  dream-comfyui-input:
-    name: dream-comfyui-input
-  dream-openclaw-data:
-    name: dream-openclaw-data
-  dream-privacy-shield-data:
-    name: dream-privacy-shield-data
+  dream-server_models:
+    name: dream-server_models
+  dream-server_webui-data:
+    name: dream-server_webui-data
+  dream-server_hf-cache:
+    name: dream-server_hf-cache
+  dream-server_qdrant-data:
+    name: dream-server_qdrant-data
+  dream-server_n8n-data:
+    name: dream-server_n8n-data
+  dream-server_comfyui-models:
+    name: dream-server_comfyui-models
+  dream-server_comfyui-output:
+    name: dream-server_comfyui-output
+  dream-server_comfyui-input:
+    name: dream-server_comfyui-input
+  dream-server_openclaw-data:
+    name: dream-server_openclaw-data
+  dream-server_privacy-shield-data:
+    name: dream-server_privacy-shield-data
