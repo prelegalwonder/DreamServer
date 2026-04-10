@@ -299,7 +299,7 @@ MODELS_INI_EOF
     compose_ok=false
     # Build locally-built images individually so one failure doesn't block the rest
     _build_count=0
-    _build_services=(dashboard dashboard-api ape token-spy privacy-shield)
+    _build_services=(dashboard dashboard-api dream-gateway ape token-spy privacy-shield)
     [[ "$ENABLE_COMFYUI" == "true" ]] && _build_services+=(comfyui)
     if [[ "${ENABLE_DREAMFORGE:-}" == "true" ]]; then
         _dreamforge_image="${DREAMFORGE_IMAGE:-ghcr.io/light-heart-labs/dreamforge:latest}"
