@@ -22,7 +22,7 @@ services:
     entrypoint: ["/bin/sh", "-c", "chown -R 1000:1000 /home/node/.openclaw; exec setpriv --reuid=1000 --regid=1000 --clear-groups /bin/sh -c 'node /config/inject-token.js; export OPENCLAW_CONFIG=/tmp/openclaw-config.json; exec docker-entrypoint.sh node openclaw.mjs gateway --allow-unconfigured --bind lan'"]
     volumes:
       - ./config/openclaw:/config:ro
-      - ./data/openclaw:/data
+      - dream-openclaw-data:/data
       - openclaw-home:/home/node/.openclaw
       - ./config/openclaw/workspace:/home/node/.openclaw/workspace
     ports:
@@ -59,3 +59,5 @@ services:
 
 volumes:
   openclaw-home:
+  dream-openclaw-data:
+    external: true

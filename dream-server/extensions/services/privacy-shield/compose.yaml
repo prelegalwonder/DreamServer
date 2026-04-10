@@ -18,7 +18,7 @@ services:
       - PII_CACHE_TTL=${PII_CACHE_TTL:-300}
       - LOG_LEVEL=${LOG_LEVEL:-info}
     volumes:
-      - ./data/privacy-shield:/data
+      - dream-privacy-shield-data:/data
     ports:
       - "127.0.0.1:${SHIELD_PORT:-8085}:8085"
     deploy:
@@ -40,3 +40,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  dream-privacy-shield-data:
+    external: true

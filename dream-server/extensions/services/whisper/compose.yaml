@@ -12,7 +12,7 @@ services:
     # the mount is ready, causing transient "permission denied" errors.
     entrypoint: ["/bin/sh", "-c", "until [ -x /app/docker-entrypoint.sh ]; do sleep 0.5; done; exec /app/docker-entrypoint.sh"]
     volumes:
-      - ./data/whisper:/home/ubuntu/.cache/huggingface/hub
+      - dream-hf-cache:/home/ubuntu/.cache/huggingface/hub
       - ./extensions/services/whisper/docker-entrypoint.sh:/app/docker-entrypoint.sh:ro
     ports:
       - "127.0.0.1:${WHISPER_PORT:-9000}:8000"
@@ -35,3 +35,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  dream-hf-cache:
+    external: true

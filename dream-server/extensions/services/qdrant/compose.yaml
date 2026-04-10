@@ -8,7 +8,7 @@ services:
     environment:
       - QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY:-}
     volumes:
-      - ./data/qdrant:/qdrant/storage
+      - dream-qdrant-data:/qdrant/storage
     ports:
       - "127.0.0.1:${QDRANT_PORT:-6333}:6333"
       - "127.0.0.1:${QDRANT_GRPC_PORT:-6334}:6334"
@@ -28,3 +28,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  dream-qdrant-data:
+    external: true
